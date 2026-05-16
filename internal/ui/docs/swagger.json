@@ -42,10 +42,1605 @@
                         }
                     }
                 }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Move or rename a document",
+                "parameters": [
+                    {
+                        "description": "Move/rename instructions",
+                        "name": "update",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.UpdateDoc"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/documents/upload": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Upload one or more documents",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Document file(s) to upload — repeat the field for multiple",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Parent folder UUID (omit or 'root' for root)",
+                        "name": "parent",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_storage.Document"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "document with same name already exists (response includes docId)",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/documents/{docid}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Export a document",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Document UUID",
+                        "name": "docid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "pdf",
+                            "rmdoc"
+                        ],
+                        "type": "string",
+                        "default": "pdf",
+                        "description": "Export format",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Delete a document",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Document UUID",
+                        "name": "docid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/documents/{docid}/metadata": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Get document metadata (placeholder)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Document UUID",
+                        "name": "docid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "TODO",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/folders": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Create a folder",
+                "parameters": [
+                    {
+                        "description": "Folder name and parent",
+                        "name": "folder",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.NewFolder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_storage.Document"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "List the user's integrations",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Create a storage integration",
+                "parameters": [
+                    {
+                        "description": "Integration configuration",
+                        "name": "integration",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Localfs provider — edit user profile manually",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/{intid}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Get an integration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration UUID",
+                        "name": "intid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Update an integration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration UUID",
+                        "name": "intid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated configuration",
+                        "name": "integration",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Localfs provider — edit user profile manually",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Delete an integration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration UUID",
+                        "name": "intid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/{intid}/download/{path}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Download a file from a configured integration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration UUID",
+                        "name": "intid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Remote file path",
+                        "name": "path",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/{intid}/explore/{path}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Browse a folder on a configured integration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration UUID",
+                        "name": "intid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Folder path (use leading slash; empty for root)",
+                        "name": "path",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_messages.IntegrationFolder"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/{intid}/metadata/{path}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Get metadata for a file on a configured integration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration UUID",
+                        "name": "intid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Remote file path",
+                        "name": "path",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_messages.IntegrationMetadata"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Authenticate and obtain a JWT",
+                "parameters": [
+                    {
+                        "description": "Email and password",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.LoginForm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JWT bearer token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid request body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "wrong credentials",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "get": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Log out (clear auth cookie)",
+                "responses": {
+                    "200": {
+                        "description": "logged out",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/newcode": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Generate a device pairing code",
+                "responses": {
+                    "200": {
+                        "description": "8-character pairing code",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/passcode/resets": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "passcode"
+                ],
+                "summary": "List pending passcode-reset requests",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_messages.PasscodeReset"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/passcode/resets/{uuid}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "passcode"
+                ],
+                "summary": "Dismiss a pending passcode-reset request",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Reset request UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/passcode/resets/{uuid}/approve": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "passcode"
+                ],
+                "summary": "Approve a pending passcode-reset request",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Reset request UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/profile": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Change the authenticated user's password",
+                "parameters": [
+                    {
+                        "description": "Current + new password",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ResetPasswordForm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_model.User"
+                        }
+                    },
+                    "400": {
+                        "description": "wrong user, missing fields, or wrong current password",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/register": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register a new user account",
+                "parameters": [
+                    {
+                        "description": "Email and password",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.LoginForm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_model.User"
+                        }
+                    },
+                    "400": {
+                        "description": "registration closed or invalid body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "registrations only accepted from localhost",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/screenshare/offer": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "screenshare"
+                ],
+                "summary": "Request a WebRTC offer from the active screenshare session",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareOffer"
+                        }
+                    },
+                    "404": {
+                        "description": "no active room",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "504": {
+                        "description": "device did not respond within 30s",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/screenshare/room": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "screenshare"
+                ],
+                "summary": "Get the caller's active screenshare room",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareRoom"
+                        }
+                    },
+                    "404": {
+                        "description": "no active room",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/screenshare/room/{roomId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "screenshare"
+                ],
+                "summary": "Get a screenshare room by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Room ID",
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareRoom"
+                        }
+                    },
+                    "404": {
+                        "description": "room not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "screenshare"
+                ],
+                "summary": "Tear down all screenshare rooms for the caller",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Room ID (currently ignored — all caller rooms are deleted)",
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/screenshare/room/{roomId}/answer": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "screenshare"
+                ],
+                "summary": "Send a WebRTC answer to a screenshare room",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Room ID",
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Signaling payload + target client ID",
+                        "name": "answer",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareAnswer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted"
+                    },
+                    "400": {
+                        "description": "invalid body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "room not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sync": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "sync"
+                ],
+                "summary": "Trigger sync notification for connected devices",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List all users (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.User"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Update a user (admin)",
+                "parameters": [
+                    {
+                        "description": "User to update — ID must reference an existing user",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "user not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Create a user (admin)",
+                "parameters": [
+                    {
+                        "description": "New user fields",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.NewUser"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/users/{userid}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get a user by ID (admin or self)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "querying a different user as non-admin",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "user not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Delete a user (admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted"
+                    },
+                    "500": {
+                        "description": "cannot delete current user, or storage error"
+                    }
+                }
             }
         }
     },
     "definitions": {
+        "github_com_ddvk_rmfakecloud_internal_common.EntryType": {
+            "type": "string",
+            "enum": [
+                "DocumentType",
+                "CollectionType"
+            ],
+            "x-enum-varnames": [
+                "DocumentType",
+                "CollectionType"
+            ]
+        },
+        "github_com_ddvk_rmfakecloud_internal_messages.IntegrationFile": {
+            "type": "object",
+            "properties": {
+                "dateChanged": {
+                    "type": "string"
+                },
+                "fileExtension": {
+                    "type": "string"
+                },
+                "fileID": {
+                    "type": "string"
+                },
+                "fileType": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providedFileType": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "sourceFileType": {
+                    "type": "string"
+                },
+                "supportedFileTypes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_messages.IntegrationFolder": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_messages.IntegrationFile"
+                    }
+                },
+                "folderID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "subFolders": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_messages.IntegrationFolder"
+                    }
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_messages.IntegrationMetadata": {
+            "type": "object",
+            "properties": {
+                "fileType": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providedFileType": {
+                    "type": "string"
+                },
+                "sourceFileType": {
+                    "type": "string"
+                },
+                "thumbnail": {
+                    "description": "Thumbnail is base64 encoded string of an image/png",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_messages.PasscodeReset": {
+            "type": "object",
+            "properties": {
+                "Approved": {
+                    "type": "boolean"
+                },
+                "Created": {
+                    "type": "string"
+                },
+                "DeviceID": {
+                    "type": "string"
+                },
+                "DeviceName": {
+                    "type": "string"
+                },
+                "Expires": {
+                    "type": "string"
+                },
+                "RequestID": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig": {
+            "type": "object",
+            "properties": {
+                "accesstoken": {
+                    "description": "Dropbox",
+                    "type": "string"
+                },
+                "activeTransfers": {
+                    "description": "FTP",
+                    "type": "boolean"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "endpoint": {
+                    "description": "Webhook",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "insecure": {
+                    "description": "Insecure ignore TLS cert errors",
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "path": {
+                    "description": "Localfs\nreally dangerous as it allows path traversal",
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "username": {
+                    "description": "WebDav // FTP",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_model.User": {
+            "type": "object",
+            "properties": {
+                "additionalScopes": {
+                    "description": "AdditionalScopes is a list of scopes to add to the user session.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "emailVerified": {
+                    "type": "boolean"
+                },
+                "familyName": {
+                    "type": "string"
+                },
+                "givenName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "integrations": {
+                    "description": "Integrations stores the list of \"Integrations\" as shown on the tablet.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig"
+                    }
+                },
+                "isAdmin": {
+                    "description": "IsAdmin indicates if the user can managed others users in this instance.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "sync15": {
+                    "description": "Sync15 if the user should use this sync type (which uses a lot less bandwidth).",
+                    "type": "boolean"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_storage.Document": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parent": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_common.EntryType"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_ddvk_rmfakecloud_internal_ui_viewmodel.DocumentTree": {
             "type": "object",
             "properties": {
@@ -63,6 +1658,150 @@
             "type": "object",
             "properties": {
                 "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_ui_viewmodel.LoginForm": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_ui_viewmodel.NewFolder": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "parentId": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_ui_viewmodel.NewUser": {
+            "type": "object",
+            "required": [
+                "newpassword",
+                "userid"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "newpassword": {
+                    "type": "string"
+                },
+                "userid": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ResetPasswordForm": {
+            "type": "object",
+            "properties": {
+                "currentPassword": {
+                    "type": "string"
+                },
+                "newPassword": {
+                    "type": "string"
+                },
+                "userid": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareAnswer": {
+            "type": "object",
+            "properties": {
+                "payload": {},
+                "targetClientId": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareOffer": {
+            "type": "object",
+            "properties": {
+                "iceServers": {
+                    "type": "array",
+                    "items": {}
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {}
+                },
+                "roomId": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareRoom": {
+            "type": "object",
+            "properties": {
+                "clients": {
+                    "type": "array",
+                    "items": {}
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "iceServers": {
+                    "type": "array",
+                    "items": {}
+                },
+                "roomId": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_ui_viewmodel.UpdateDoc": {
+            "type": "object",
+            "required": [
+                "documentId"
+            ],
+            "properties": {
+                "documentId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parentId": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_ui_viewmodel.User": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "integrations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "isAdmin": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "newpassword": {
+                    "type": "string"
+                },
+                "userid": {
                     "type": "string"
                 }
             }

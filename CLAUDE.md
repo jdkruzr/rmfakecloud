@@ -22,7 +22,15 @@ Testing/linting:
 - Run a single Go test: `go test ./internal/app -run TestCodeConnector`.
 - `make testui` is currently a no-op (`echo "TODO: fix this"`).
 - UI lint: `cd ui && pnpm lint` (eslint flat config in `ui/eslint.config.js`).
-- There is no Go linter configured in the Makefile; CI (`.github/workflows/go.yml`) only runs `make build`.
+- There is no Go linter configured in the Makefile. CI (`.github/workflows/go.yml`) runs `make build`, `make testgo`, and `make swagger-check`.
+
+OpenAPI spec (admin/UI API only — the device-facing routes are deliberately not specced):
+- Source of truth: swag annotations on handlers in `internal/ui/*.go`. Generated artifacts live in `internal/ui/docs/` and are checked in.
+- `make swagger-install` — installs `swaggo/swag` to `$GOPATH/bin`.
+- `make swagger` — regenerates `internal/ui/docs/{docs.go,swagger.json,swagger.yaml}`. Run after any change to a `/ui/api` handler signature, response shape, or annotation.
+- `make swagger-check` — CI gate: regenerates and fails if `internal/ui/docs/` drifts from the annotations. **If CI fails here, run `make swagger` and commit the result.**
+- At runtime, set `RM_ENABLE_OPENAPI=1` to mount the spec live: `/ui/api/openapi.json` (raw JSON for client generators) and `/ui/api/docs/` (Swagger UI). Default-off.
+- Cross-package type refs in annotations require the underscore-mangled module path (e.g. `github_com_ddvk_rmfakecloud_internal_messages.IntegrationFolder`) unless the file directly imports the package. Don't use the short `messages.X` form across package boundaries.
 
 CLI (admin) commands — built into the same binary, dispatched in `internal/cli`:
 - `rmfakecloud setuser -u <name> [-p <pass>] [-a] [-s]` — create/update user. `-a` makes admin, `-s` enables sync15. Without `-p`, a password is generated and printed.
@@ -51,7 +59,9 @@ CLI (admin) commands — built into the same binary, dispatched in `internal/cli
 
 ### `internal/ui` — web admin UI backend
 - Serves the React app from the embedded `ui/dist` (Go embed via `ui/assets.go`). UI is built separately into `ui/dist` before `go build`.
-- Adds its own JSON API under (typically) `/ui/api/...` for the React app, separate from the device API. View models live in `internal/ui/viewmodel/`.
+- Adds its own JSON API under `/ui/api/...` for the React app, separate from the device API. View models live in `internal/ui/viewmodel/` — every response shape the React app consumes should be a named struct there (not `gin.H{}`) so swag can model it. The screenshare endpoints in particular return `viewmodel.Screenshare{Room,Offer,Answer}` for this reason.
+- `ReactAppWrapper` is the receiver for all handlers. Routes wire to named methods (e.g. `app.logout`, `app.triggerSync`) — avoid inline `func(c *gin.Context)` closures in `routes.go` so handlers stay addressable for swag annotations.
+- Sibling generated package `internal/ui/docs/` (produced by `make swagger`, checked in) embeds the spec in the binary; its `init()` registers with swag's global registry on process start. The `RM_ENABLE_OPENAPI=1` flag gates *route mounting* only — the spec and the Swagger UI bundle (`swaggo/files`) are always compiled in.
 
 ### `ui/` — React frontend
 - Vite + React 18 + TypeScript (some files still `.jsx`). Uses pnpm. Bootstrap 5 / react-bootstrap for styling.
@@ -76,7 +86,8 @@ CLI (admin) commands — built into the same binary, dispatched in `internal/cli
 ## Things to know before changing code
 
 - The device-facing URL paths are **part of the contract with the device firmware** — they are not free to refactor. Changes there must keep matching what reMarkable's `xochitl` sends.
+- The `/ui/api/*` paths are a lighter contract with the bundled React app and any external client-generator consumer: the OpenAPI spec under `internal/ui/docs/` is the source of record, and `make swagger-check` runs in CI to catch drift. Changing a request/response shape means updating the swag annotation and regenerating.
 - Two sync protocols are alive simultaneously. When touching sync logic, check whether a route is sync10 (`docStorer` path) or sync15 (`blobStorer` path under `/sync/v2..v4/`) and which is gated by the user's `sync15` flag.
-- The UI is shipped embedded into the Go binary; you must rebuild the UI (`pnpm build` or `make` which depends on `ui/dist`) for UI changes to appear in `make run`/`make build`. `./dev.sh` and `make runui` bypass this by running Vite directly.
+- The UI is shipped embedded into the Go binary; you must rebuild the UI (`pnpm build` or `make` which depends on `ui/dist`) for UI changes to appear in `make run`/`make build`. `./dev.sh` and `make runui` bypass this by running Vite directly. Likewise, after editing any `/ui/api` handler annotation/signature/response shape, run `make swagger` so the generated `internal/ui/docs/` stays in sync (CI fails otherwise).
 - The README warns that breaking changes have shipped at the storage level (notably the v0.0.3 data move and the v0.0.5 sync15 addition). Be cautious with on-disk format changes — there is no migration framework.
 - `STORAGE_URL` semantics changed for device SW ≥ 3.15 (it should be unset, or `https://host` without a port). When working on discovery/registration endpoints (`/discovery/v1/*`, `/service/json/1/:service`) keep this in mind.

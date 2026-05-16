@@ -38,6 +38,47 @@ func userID(c *gin.Context) string {
 	return c.GetString(userIDContextKey)
 }
 
+// logout clears the auth cookie. The JWT itself is stateless and cannot be
+// invalidated server-side; the client must discard it.
+//
+// @Summary  Log out (clear auth cookie)
+// @Tags     auth
+// @Success  200 {string} string "logged out"
+// @Router   /logout [get]
+func (app *ReactAppWrapper) logout(c *gin.Context) {
+	c.SetCookie(cookieName, "/", -1, "", "", false, true)
+	c.Status(http.StatusOK)
+}
+
+// triggerSync nudges the device-notification hub to wake any connected
+// devices belonging to the caller. Used by the React UI after edits.
+//
+// @Summary  Trigger sync notification for connected devices
+// @Tags     sync
+// @Success  200 {string} string ""
+// @Router   /sync [get]
+// @Security BearerAuth
+func (app *ReactAppWrapper) triggerSync(c *gin.Context) {
+	uid := userID(c)
+	br := c.GetString(browserIDContextKey)
+	log.Info("browser", br)
+	app.h.NotifySync(uid, br)
+}
+
+// register creates a new user account. Restricted to RegistrationOpen
+// installations and to requests originating from localhost so admins can
+// bootstrap the first user safely.
+//
+// @Summary  Register a new user account
+// @Tags     auth
+// @Accept   json
+// @Produce  json
+// @Param    credentials body viewmodel.LoginForm true "Email and password"
+// @Success  200 {object} model.User
+// @Failure  400 {object} viewmodel.ErrorResponse "registration closed or invalid body"
+// @Failure  403 {object} viewmodel.ErrorResponse "registrations only accepted from localhost"
+// @Failure  500 {object} viewmodel.ErrorResponse
+// @Router   /register [post]
 func (app *ReactAppWrapper) register(c *gin.Context) {
 
 	if !app.cfg.RegistrationOpen {
@@ -86,6 +127,21 @@ func (app *ReactAppWrapper) register(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// login authenticates a user with email + password and returns a JWT.
+// The same token is also set as the .Authrmfakecloud cookie. If the server
+// was started with CreateFirstUser, the first successful login bootstraps
+// an admin account for the supplied credentials.
+//
+// @Summary  Authenticate and obtain a JWT
+// @Tags     auth
+// @Accept   json
+// @Produce  plain
+// @Param    credentials body viewmodel.LoginForm true "Email and password"
+// @Success  200 {string} string "JWT bearer token"
+// @Failure  400 {string} string "invalid request body"
+// @Failure  401 {string} string "wrong credentials"
+// @Failure  500 {string} string "internal error"
+// @Router   /login [post]
 func (app *ReactAppWrapper) login(c *gin.Context) {
 	var form viewmodel.LoginForm
 	if err := c.ShouldBindJSON(&form); err != nil {
@@ -167,6 +223,20 @@ func (app *ReactAppWrapper) login(c *gin.Context) {
 	c.String(http.StatusOK, tokenString)
 }
 
+// changePassword updates the caller's password. UserID in the body must
+// match the authenticated user — admins cannot change another user's
+// password through this endpoint (use PUT /users instead).
+//
+// @Summary  Change the authenticated user's password
+// @Tags     profile
+// @Accept   json
+// @Produce  json
+// @Param    request body     viewmodel.ResetPasswordForm true "Current + new password"
+// @Success  200 {object} model.User
+// @Failure  400 {object} viewmodel.ErrorResponse "wrong user, missing fields, or wrong current password"
+// @Failure  500 {object} viewmodel.ErrorResponse
+// @Router   /profile [post]
+// @Security BearerAuth
 func (app *ReactAppWrapper) changePassword(c *gin.Context) {
 	var req viewmodel.ResetPasswordForm
 
@@ -216,6 +286,17 @@ func (app *ReactAppWrapper) changePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// newCode generates a short one-time pairing code that a reMarkable device
+// uses to register against this server. The code is single-use and short
+// lived; check internal/app/codeconnector.go for the TTL.
+//
+// @Summary  Generate a device pairing code
+// @Tags     auth
+// @Produce  json
+// @Success  200 {string} string "8-character pairing code"
+// @Failure  500 {object} viewmodel.ErrorResponse
+// @Router   /newcode [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) newCode(c *gin.Context) {
 	uid := userID(c)
 
@@ -274,6 +355,19 @@ func (app *ReactAppWrapper) listDocuments(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, tree)
 }
+// getDocument exports a document. The default `type=pdf` renders the
+// notebook/PDF to a PDF stream; `type=rmdoc` returns a downloadable .rmdoc
+// archive. The response body is the raw file bytes.
+//
+// @Summary  Export a document
+// @Tags     documents
+// @Produce  application/octet-stream
+// @Param    docid path     string true  "Document UUID"
+// @Param    type  query    string false "Export format" Enums(pdf, rmdoc) default(pdf)
+// @Success  200 {file}     binary
+// @Failure  500 {object}   viewmodel.ErrorResponse
+// @Router   /documents/{docid} [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) getDocument(c *gin.Context) {
 	uid := userID(c)
 	docid := common.ParamS(docIDParam, c)
@@ -300,6 +394,17 @@ func (app *ReactAppWrapper) getDocument(c *gin.Context) {
 	c.DataFromReader(http.StatusOK, -1, "application/octet-stream", reader, nil)
 }
 
+// getDocumentMetadata is a placeholder — currently returns the literal
+// string "TODO". Documented for surface completeness; clients should not
+// depend on the response shape until this is implemented.
+//
+// @Summary  Get document metadata (placeholder)
+// @Tags     documents
+// @Produce  json
+// @Param    docid path string true "Document UUID"
+// @Success  200 {string} string "TODO"
+// @Router   /documents/{docid}/metadata [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) getDocumentMetadata(c *gin.Context) {
 	uid := userID(c)
 	docid := common.ParamS(docIDParam, c)
@@ -313,7 +418,19 @@ func (app *ReactAppWrapper) getDocumentMetadata(c *gin.Context) {
 
 }
 
-// move rename
+// updateDocument moves or renames a document. Set ParentID to the target
+// folder UUID (empty string or "root" puts it at the root, "trash" moves
+// it to the trash). Name is the new display name.
+//
+// @Summary  Move or rename a document
+// @Tags     documents
+// @Accept   json
+// @Produce  json
+// @Param    update body     viewmodel.UpdateDoc true "Move/rename instructions"
+// @Success  200
+// @Failure  400 {object}    viewmodel.ErrorResponse
+// @Router   /documents [put]
+// @Security BearerAuth
 func (app *ReactAppWrapper) updateDocument(c *gin.Context) {
 	upd := viewmodel.UpdateDoc{}
 	if err := c.ShouldBindJSON(&upd); err != nil {
@@ -332,6 +449,16 @@ func (app *ReactAppWrapper) updateDocument(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 }
+// deleteDocument permanently deletes a document. There is no soft-delete
+// from this endpoint; use PUT /documents with parent=trash to move-to-trash.
+//
+// @Summary  Delete a document
+// @Tags     documents
+// @Param    docid path string true "Document UUID"
+// @Success  200
+// @Failure  400 {object} viewmodel.ErrorResponse
+// @Router   /documents/{docid} [delete]
+// @Security BearerAuth
 func (app *ReactAppWrapper) deleteDocument(c *gin.Context) {
 	uid := userID(c)
 	docid := c.Param("docid")
@@ -344,6 +471,19 @@ func (app *ReactAppWrapper) deleteDocument(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// createFolder creates a new folder under the supplied ParentID (empty
+// string places it at the root).
+//
+// @Summary  Create a folder
+// @Tags     documents
+// @Accept   json
+// @Produce  json
+// @Param    folder body     viewmodel.NewFolder true "Folder name and parent"
+// @Success  200 {object}    storage.Document
+// @Failure  400 {object}    viewmodel.ErrorResponse
+// @Failure  500 {object}    viewmodel.ErrorResponse
+// @Router   /folders [post]
+// @Security BearerAuth
 func (app *ReactAppWrapper) createFolder(c *gin.Context) {
 	upd := viewmodel.NewFolder{}
 	if err := c.ShouldBindJSON(&upd); err != nil {
@@ -364,6 +504,22 @@ func (app *ReactAppWrapper) createFolder(c *gin.Context) {
 	c.JSON(http.StatusOK, doc)
 }
 
+// createDocument uploads one or more files. Each file in the `file` form
+// field becomes a document. Supply an optional `parent` form field with
+// the target folder UUID (or "root").
+//
+// @Summary  Upload one or more documents
+// @Tags     documents
+// @Accept   multipart/form-data
+// @Produce  json
+// @Param    file   formData file   true  "Document file(s) to upload — repeat the field for multiple"
+// @Param    parent formData string false "Parent folder UUID (omit or 'root' for root)"
+// @Success  200 {array}  storage.Document
+// @Failure  400 {object} viewmodel.ErrorResponse
+// @Failure  409 {object} viewmodel.ErrorResponse "document with same name already exists (response includes docId)"
+// @Failure  500 {object} viewmodel.ErrorResponse
+// @Router   /documents/upload [post]
+// @Security BearerAuth
 func (app *ReactAppWrapper) createDocument(c *gin.Context) {
 	uid := userID(c)
 	log.Info("uploading documents from: ", uid)
@@ -415,6 +571,15 @@ func (app *ReactAppWrapper) createDocument(c *gin.Context) {
 	c.JSON(http.StatusOK, docs)
 }
 
+// getAppUsers returns every user on the instance. Admin-only.
+//
+// @Summary  List all users (admin)
+// @Tags     admin
+// @Produce  json
+// @Success  200 {array}  viewmodel.User
+// @Failure  500 {object} viewmodel.ErrorResponse
+// @Router   /users [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) getAppUsers(c *gin.Context) {
 	// Try to find the user
 	users, err := app.userStorer.GetUsers()
@@ -439,6 +604,19 @@ func (app *ReactAppWrapper) getAppUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, uilist)
 }
 
+// getUser returns a single user by ID. Non-admins may only fetch their
+// own profile; querying another user as a non-admin returns 401.
+//
+// @Summary  Get a user by ID (admin or self)
+// @Tags     admin
+// @Produce  json
+// @Param    userid path string true "User ID"
+// @Success  200 {object} viewmodel.User
+// @Failure  400 {object} viewmodel.ErrorResponse
+// @Failure  401 {string} string "querying a different user as non-admin"
+// @Failure  404 {string} string "user not found"
+// @Router   /users/{userid} [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) getUser(c *gin.Context) {
 	uid := c.Param(useridParam)
 	log.Info("Requested: ", uid)
@@ -474,6 +652,18 @@ func (app *ReactAppWrapper) getUser(c *gin.Context) {
 	c.JSON(http.StatusOK, vmUser)
 }
 
+// updateUser replaces a user's email and/or password. Admin-only.
+//
+// @Summary  Update a user (admin)
+// @Tags     admin
+// @Accept   json
+// @Param    user body viewmodel.User true "User to update — ID must reference an existing user"
+// @Success  202
+// @Failure  400
+// @Failure  404 {string} string "user not found"
+// @Failure  500
+// @Router   /users [put]
+// @Security BearerAuth
 func (app *ReactAppWrapper) updateUser(c *gin.Context) {
 	var req viewmodel.User
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -507,6 +697,16 @@ func (app *ReactAppWrapper) updateUser(c *gin.Context) {
 	}
 	c.Status(http.StatusAccepted)
 }
+// deleteUser removes a user. The caller cannot delete themselves —
+// trying to do so returns 500. Admin-only.
+//
+// @Summary  Delete a user (admin)
+// @Tags     admin
+// @Param    userid path string true "User ID"
+// @Success  202
+// @Failure  500 "cannot delete current user, or storage error"
+// @Router   /users/{userid} [delete]
+// @Security BearerAuth
 func (app *ReactAppWrapper) deleteUser(c *gin.Context) {
 	uid := c.Param(useridParam)
 	if uid == userID(c) {
@@ -523,6 +723,18 @@ func (app *ReactAppWrapper) deleteUser(c *gin.Context) {
 	c.Status(http.StatusAccepted)
 }
 
+// createUser provisions a new user account. Admin-only — the public
+// /register endpoint is restricted to localhost.
+//
+// @Summary  Create a user (admin)
+// @Tags     admin
+// @Accept   json
+// @Param    user body viewmodel.NewUser true "New user fields"
+// @Success  201
+// @Failure  400 {object} viewmodel.ErrorResponse
+// @Failure  500
+// @Router   /users [post]
+// @Security BearerAuth
 func (app *ReactAppWrapper) createUser(c *gin.Context) {
 	var req viewmodel.NewUser
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -549,6 +761,17 @@ func (app *ReactAppWrapper) createUser(c *gin.Context) {
 	c.Status(http.StatusCreated)
 }
 
+// listIntegrations returns the caller's configured cloud-storage integrations
+// (WebDAV, FTP, Dropbox, etc.). Secrets in the response are NOT scrubbed —
+// callers should treat the payload as sensitive.
+//
+// @Summary  List the user's integrations
+// @Tags     integrations
+// @Produce  json
+// @Success  200 {array}  model.IntegrationConfig
+// @Failure  401 {object} viewmodel.ErrorResponse
+// @Router   /integrations [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) listIntegrations(c *gin.Context) {
 	uid := userID(c)
 
@@ -573,6 +796,22 @@ func warnLocalfsEdition(c *gin.Context, int *model.IntegrationConfig) {
 		viewmodel.NewErrorResponse("To avoid security issues with local directory integration, you have to manually edit your .userprofile file:\n\n"+string(s)))
 }
 
+// createIntegration adds a new storage integration to the caller's profile.
+// The Localfs provider is rejected with 403 — its config must be edited
+// manually in the user profile file to prevent path-traversal abuse.
+//
+// @Summary  Create a storage integration
+// @Tags     integrations
+// @Accept   json
+// @Produce  json
+// @Param    integration body     model.IntegrationConfig true "Integration configuration"
+// @Success  200 {object} model.IntegrationConfig
+// @Failure  400 {object} viewmodel.ErrorResponse
+// @Failure  401 {object} viewmodel.ErrorResponse
+// @Failure  403 {object} viewmodel.ErrorResponse "Localfs provider — edit user profile manually"
+// @Failure  500 {object} viewmodel.ErrorResponse
+// @Router   /integrations [post]
+// @Security BearerAuth
 func (app *ReactAppWrapper) createIntegration(c *gin.Context) {
 	int := model.IntegrationConfig{}
 	if err := c.ShouldBindJSON(&int); err != nil {
@@ -610,6 +849,17 @@ func (app *ReactAppWrapper) createIntegration(c *gin.Context) {
 	c.JSON(http.StatusOK, int)
 }
 
+// getIntegration returns a single integration by ID.
+//
+// @Summary  Get an integration
+// @Tags     integrations
+// @Produce  json
+// @Param    intid path string true "Integration UUID"
+// @Success  200 {object} model.IntegrationConfig
+// @Failure  401 {object} viewmodel.ErrorResponse
+// @Failure  404
+// @Router   /integrations/{intid} [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) getIntegration(c *gin.Context) {
 	uid := userID(c)
 
@@ -632,6 +882,23 @@ func (app *ReactAppWrapper) getIntegration(c *gin.Context) {
 	c.AbortWithStatus(http.StatusNotFound)
 }
 
+// updateIntegration replaces an existing integration's config. As with
+// create, Localfs cannot be edited through the API.
+//
+// @Summary  Update an integration
+// @Tags     integrations
+// @Accept   json
+// @Produce  json
+// @Param    intid       path     string                  true "Integration UUID"
+// @Param    integration body     model.IntegrationConfig true "Updated configuration"
+// @Success  200 {object} model.IntegrationConfig
+// @Failure  400 {object} viewmodel.ErrorResponse
+// @Failure  401 {object} viewmodel.ErrorResponse
+// @Failure  403 {object} viewmodel.ErrorResponse "Localfs provider — edit user profile manually"
+// @Failure  404
+// @Failure  500 {object} viewmodel.ErrorResponse
+// @Router   /integrations/{intid} [put]
+// @Security BearerAuth
 func (app *ReactAppWrapper) updateIntegration(c *gin.Context) {
 	int := model.IntegrationConfig{}
 	if err := c.ShouldBindJSON(&int); err != nil {
@@ -677,6 +944,17 @@ func (app *ReactAppWrapper) updateIntegration(c *gin.Context) {
 	c.AbortWithStatus(http.StatusNotFound)
 }
 
+// deleteIntegration removes the integration from the caller's profile.
+//
+// @Summary  Delete an integration
+// @Tags     integrations
+// @Param    intid path string true "Integration UUID"
+// @Success  202
+// @Failure  401 {object} viewmodel.ErrorResponse
+// @Failure  404
+// @Failure  500 {object} viewmodel.ErrorResponse
+// @Router   /integrations/{intid} [delete]
+// @Security BearerAuth
 func (app *ReactAppWrapper) deleteIntegration(c *gin.Context) {
 	uid := userID(c)
 
@@ -709,6 +987,19 @@ func (app *ReactAppWrapper) deleteIntegration(c *gin.Context) {
 	c.AbortWithStatus(http.StatusNotFound)
 }
 
+// exploreIntegration lists the contents of a folder on the configured
+// remote (WebDAV, FTP, Dropbox, ...). Path is the integration-relative
+// path; missing or empty paths default to "root".
+//
+// @Summary  Browse a folder on a configured integration
+// @Tags     integrations
+// @Produce  json
+// @Param    intid path string true  "Integration UUID"
+// @Param    path  path string false "Folder path (use leading slash; empty for root)"
+// @Success  200 {object} github_com_ddvk_rmfakecloud_internal_messages.IntegrationFolder
+// @Failure  500 {object} viewmodel.ErrorResponse
+// @Router   /integrations/{intid}/explore/{path} [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) exploreIntegration(c *gin.Context) {
 	uid := userID(c)
 
@@ -736,6 +1027,18 @@ func (app *ReactAppWrapper) exploreIntegration(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// getMetadataIntegration returns metadata for a single remote file
+// without downloading it.
+//
+// @Summary  Get metadata for a file on a configured integration
+// @Tags     integrations
+// @Produce  json
+// @Param    intid path string true "Integration UUID"
+// @Param    path  path string true "Remote file path"
+// @Success  200 {object} github_com_ddvk_rmfakecloud_internal_messages.IntegrationMetadata
+// @Failure  500 {object} viewmodel.ErrorResponse
+// @Router   /integrations/{intid}/metadata/{path} [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) getMetadataIntegration(c *gin.Context) {
 	uid := userID(c)
 
@@ -760,6 +1063,18 @@ func (app *ReactAppWrapper) getMetadataIntegration(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// downloadThroughIntegration streams a remote file's raw bytes back to
+// the caller. Content-Type is not set — assume application/octet-stream.
+//
+// @Summary  Download a file from a configured integration
+// @Tags     integrations
+// @Produce  application/octet-stream
+// @Param    intid path string true "Integration UUID"
+// @Param    path  path string true "Remote file path"
+// @Success  200 {file}   binary
+// @Failure  500 {object} viewmodel.ErrorResponse
+// @Router   /integrations/{intid}/download/{path} [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) downloadThroughIntegration(c *gin.Context) {
 	uid := userID(c)
 
@@ -786,6 +1101,16 @@ func (app *ReactAppWrapper) downloadThroughIntegration(c *gin.Context) {
 	c.DataFromReader(http.StatusOK, size, "", response, nil)
 }
 
+// screenshareJoinActive returns the caller's active screenshare room (if
+// any) along with the ICE servers a WebRTC viewer should use.
+//
+// @Summary  Get the caller's active screenshare room
+// @Tags     screenshare
+// @Produce  json
+// @Success  200 {object} viewmodel.ScreenshareRoom
+// @Failure  404 {object} viewmodel.ErrorResponse "no active room"
+// @Router   /screenshare/room [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) screenshareJoinActive(c *gin.Context) {
 	uid := userID(c)
 
@@ -802,6 +1127,16 @@ func (app *ReactAppWrapper) screenshareJoinActive(c *gin.Context) {
 	})
 }
 
+// screenshareGetRoom returns the state of a specific room by ID.
+//
+// @Summary  Get a screenshare room by ID
+// @Tags     screenshare
+// @Produce  json
+// @Param    roomId path string true "Room ID"
+// @Success  200 {object} viewmodel.ScreenshareRoom
+// @Failure  404 {object} viewmodel.ErrorResponse "room not found"
+// @Router   /screenshare/room/{roomId} [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) screenshareGetRoom(c *gin.Context) {
 	roomID := c.Param("roomId")
 
@@ -818,6 +1153,18 @@ func (app *ReactAppWrapper) screenshareGetRoom(c *gin.Context) {
 	})
 }
 
+// screenshareGetOffer broadcasts an offer-request to the device that owns
+// the active screenshare room and waits up to 30s for a signaling message
+// back. Returns the offer + ICE servers when the device responds.
+//
+// @Summary  Request a WebRTC offer from the active screenshare session
+// @Tags     screenshare
+// @Produce  json
+// @Success  200 {object} viewmodel.ScreenshareOffer
+// @Failure  404 {object} viewmodel.ErrorResponse "no active room"
+// @Failure  504 {object} viewmodel.ErrorResponse "device did not respond within 30s"
+// @Router   /screenshare/offer [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) screenshareGetOffer(c *gin.Context) {
 	uid := userID(c)
 	clientID := c.GetString(browserIDContextKey)
@@ -862,6 +1209,19 @@ func (app *ReactAppWrapper) screenshareGetOffer(c *gin.Context) {
 	})
 }
 
+// screenshareSendAnswer relays a viewer's WebRTC answer (or ICE
+// candidate) back to the broadcasting device.
+//
+// @Summary  Send a WebRTC answer to a screenshare room
+// @Tags     screenshare
+// @Accept   json
+// @Param    roomId path     string                       true "Room ID"
+// @Param    answer body     viewmodel.ScreenshareAnswer  true "Signaling payload + target client ID"
+// @Success  202
+// @Failure  400 {object} viewmodel.ErrorResponse "invalid body"
+// @Failure  404 {object} viewmodel.ErrorResponse "room not found"
+// @Router   /screenshare/room/{roomId}/answer [post]
+// @Security BearerAuth
 func (app *ReactAppWrapper) screenshareSendAnswer(c *gin.Context) {
 	roomID := c.Param("roomId")
 	clientID := c.GetString(browserIDContextKey)
@@ -900,6 +1260,16 @@ func (app *ReactAppWrapper) screenshareSendAnswer(c *gin.Context) {
 	c.Status(http.StatusAccepted)
 }
 
+// screenshareDeleteRoom tears down every screenshare room owned by the
+// caller. The roomId path param is accepted but ignored — deletion is
+// scoped to the user.
+//
+// @Summary  Tear down all screenshare rooms for the caller
+// @Tags     screenshare
+// @Param    roomId path string true "Room ID (currently ignored — all caller rooms are deleted)"
+// @Success  204
+// @Router   /screenshare/room/{roomId} [delete]
+// @Security BearerAuth
 func (app *ReactAppWrapper) screenshareDeleteRoom(c *gin.Context) {
 	uid := userID(c)
 	app.roomManager.DeleteAllForUser(uid)

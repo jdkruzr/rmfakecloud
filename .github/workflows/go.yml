@@ -35,6 +35,12 @@ jobs:
         cache: 'pnpm'
         cache-dependency-path: ui/pnpm-lock.yaml
 
+    - name: Install swag
+      run: make swagger-install
+
+    - name: Verify OpenAPI spec is up to date
+      run: make swagger-check
+
     - name: Build
       run: make build
 

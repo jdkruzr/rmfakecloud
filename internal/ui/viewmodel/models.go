@@ -239,3 +239,27 @@ type NewFolder struct {
 	ParentID string `json:"parentId"`
 	Name     string `json:"name"`
 }
+
+// ScreenshareRoom describes the active screenshare room a caller has joined
+// (or owns), plus the ICE servers the client should use for WebRTC.
+type ScreenshareRoom struct {
+	RoomID     string        `json:"roomId"`
+	Clients    []interface{} `json:"clients"`
+	ICEServers []interface{} `json:"iceServers,omitempty"`
+	CreatedAt  string        `json:"createdAt,omitempty"`
+}
+
+// ScreenshareOffer is the response returned to a viewer joining an active
+// session: the room ID, any signaling messages received from the device,
+// and the ICE servers the viewer should configure.
+type ScreenshareOffer struct {
+	RoomID     string        `json:"roomId"`
+	Messages   []interface{} `json:"messages"`
+	ICEServers []interface{} `json:"iceServers"`
+}
+
+// ScreenshareAnswer is the body posted by a viewer in response to an offer.
+type ScreenshareAnswer struct {
+	Payload        interface{} `json:"payload"`
+	TargetClientID string      `json:"targetClientId"`
+}

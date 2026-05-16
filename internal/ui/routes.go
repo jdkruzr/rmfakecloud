@@ -76,22 +76,14 @@ func (app *ReactAppWrapper) RegisterRoutes(router *gin.Engine) {
 
 	r.POST("register", app.register)
 	r.POST("login", app.login)
-	r.GET("logout", func(c *gin.Context) {
-		c.SetCookie(cookieName, "/", -1, "", "", false, true)
-		c.Status(http.StatusOK)
-	})
+	r.GET("logout", app.logout)
 	//with authentication
 	auth := r.Group("")
 	auth.Use(app.authMiddleware())
 	auth.HEAD("/", func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})
-	auth.GET("sync", func(c *gin.Context) {
-		uid := userID(c)
-		br := c.GetString(browserIDContextKey)
-		log.Info("browser", br)
-		app.h.NotifySync(uid, br)
-	})
+	auth.GET("sync", app.triggerSync)
 
 	auth.GET("newcode", app.newCode)
 

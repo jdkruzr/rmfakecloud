@@ -1,5 +1,178 @@
 basePath: /ui/api
 definitions:
+  github_com_ddvk_rmfakecloud_internal_common.EntryType:
+    enum:
+    - DocumentType
+    - CollectionType
+    type: string
+    x-enum-varnames:
+    - DocumentType
+    - CollectionType
+  github_com_ddvk_rmfakecloud_internal_messages.IntegrationFile:
+    properties:
+      dateChanged:
+        type: string
+      fileExtension:
+        type: string
+      fileID:
+        type: string
+      fileType:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      providedFileType:
+        type: string
+      size:
+        type: integer
+      sourceFileType:
+        type: string
+      supportedFileTypes:
+        items:
+          type: string
+        type: array
+    type: object
+  github_com_ddvk_rmfakecloud_internal_messages.IntegrationFolder:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_messages.IntegrationFile'
+        type: array
+      folderID:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+      subFolders:
+        items:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_messages.IntegrationFolder'
+        type: array
+    type: object
+  github_com_ddvk_rmfakecloud_internal_messages.IntegrationMetadata:
+    properties:
+      fileType:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      providedFileType:
+        type: string
+      sourceFileType:
+        type: string
+      thumbnail:
+        description: Thumbnail is base64 encoded string of an image/png
+        items:
+          type: integer
+        type: array
+    type: object
+  github_com_ddvk_rmfakecloud_internal_messages.PasscodeReset:
+    properties:
+      Approved:
+        type: boolean
+      Created:
+        type: string
+      DeviceID:
+        type: string
+      DeviceName:
+        type: string
+      Expires:
+        type: string
+      RequestID:
+        type: string
+    type: object
+  github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig:
+    properties:
+      accesstoken:
+        description: Dropbox
+        type: string
+      activeTransfers:
+        description: FTP
+        type: boolean
+      address:
+        type: string
+      endpoint:
+        description: Webhook
+        type: string
+      id:
+        type: string
+      insecure:
+        description: Insecure ignore TLS cert errors
+        type: boolean
+      name:
+        type: string
+      password:
+        type: string
+      path:
+        description: |-
+          Localfs
+          really dangerous as it allows path traversal
+        type: string
+      provider:
+        type: string
+      username:
+        description: WebDav // FTP
+        type: string
+    type: object
+  github_com_ddvk_rmfakecloud_internal_model.User:
+    properties:
+      additionalScopes:
+        description: AdditionalScopes is a list of scopes to add to the user session.
+        items:
+          type: string
+        type: array
+      createdAt:
+        type: string
+      email:
+        type: string
+      emailVerified:
+        type: boolean
+      familyName:
+        type: string
+      givenName:
+        type: string
+      id:
+        type: string
+      integrations:
+        description: Integrations stores the list of "Integrations" as shown on the
+          tablet.
+        items:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig'
+        type: array
+      isAdmin:
+        description: IsAdmin indicates if the user can managed others users in this
+          instance.
+        type: boolean
+      name:
+        type: string
+      nickname:
+        type: string
+      password:
+        type: string
+      sync15:
+        description: Sync15 if the user should use this sync type (which uses a lot
+          less bandwidth).
+        type: boolean
+      updatedAt:
+        type: string
+    type: object
+  github_com_ddvk_rmfakecloud_internal_storage.Document:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      parent:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_common.EntryType'
+      version:
+        type: integer
+    type: object
   github_com_ddvk_rmfakecloud_internal_ui_viewmodel.DocumentTree:
     properties:
       entries:
@@ -12,6 +185,101 @@ definitions:
   github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse:
     properties:
       error:
+        type: string
+    type: object
+  github_com_ddvk_rmfakecloud_internal_ui_viewmodel.LoginForm:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  github_com_ddvk_rmfakecloud_internal_ui_viewmodel.NewFolder:
+    properties:
+      name:
+        type: string
+      parentId:
+        type: string
+    type: object
+  github_com_ddvk_rmfakecloud_internal_ui_viewmodel.NewUser:
+    properties:
+      email:
+        type: string
+      newpassword:
+        type: string
+      userid:
+        type: string
+    required:
+    - newpassword
+    - userid
+    type: object
+  github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ResetPasswordForm:
+    properties:
+      currentPassword:
+        type: string
+      newPassword:
+        type: string
+      userid:
+        type: string
+    type: object
+  github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareAnswer:
+    properties:
+      payload: {}
+      targetClientId:
+        type: string
+    type: object
+  github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareOffer:
+    properties:
+      iceServers:
+        items: {}
+        type: array
+      messages:
+        items: {}
+        type: array
+      roomId:
+        type: string
+    type: object
+  github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareRoom:
+    properties:
+      clients:
+        items: {}
+        type: array
+      createdAt:
+        type: string
+      iceServers:
+        items: {}
+        type: array
+      roomId:
+        type: string
+    type: object
+  github_com_ddvk_rmfakecloud_internal_ui_viewmodel.UpdateDoc:
+    properties:
+      documentId:
+        type: string
+      name:
+        type: string
+      parentId:
+        type: string
+    required:
+    - documentId
+    type: object
+  github_com_ddvk_rmfakecloud_internal_ui_viewmodel.User:
+    properties:
+      createdAt:
+        type: string
+      email:
+        type: string
+      integrations:
+        items:
+          type: string
+        type: array
+      isAdmin:
+        type: boolean
+      name:
+        type: string
+      newpassword:
+        type: string
+      userid:
         type: string
     type: object
 info:
@@ -44,6 +312,843 @@ paths:
       summary: List documents
       tags:
       - documents
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Move/rename instructions
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.UpdateDoc'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Move or rename a document
+      tags:
+      - documents
+  /documents/{docid}:
+    delete:
+      parameters:
+      - description: Document UUID
+        in: path
+        name: docid
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a document
+      tags:
+      - documents
+    get:
+      parameters:
+      - description: Document UUID
+        in: path
+        name: docid
+        required: true
+        type: string
+      - default: pdf
+        description: Export format
+        enum:
+        - pdf
+        - rmdoc
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Export a document
+      tags:
+      - documents
+  /documents/{docid}/metadata:
+    get:
+      parameters:
+      - description: Document UUID
+        in: path
+        name: docid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: TODO
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get document metadata (placeholder)
+      tags:
+      - documents
+  /documents/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Document file(s) to upload — repeat the field for multiple
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Parent folder UUID (omit or 'root' for root)
+        in: formData
+        name: parent
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_storage.Document'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "409":
+          description: document with same name already exists (response includes docId)
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload one or more documents
+      tags:
+      - documents
+  /folders:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Folder name and parent
+        in: body
+        name: folder
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.NewFolder'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_storage.Document'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a folder
+      tags:
+      - documents
+  /integrations:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List the user's integrations
+      tags:
+      - integrations
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Integration configuration
+        in: body
+        name: integration
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "403":
+          description: Localfs provider — edit user profile manually
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a storage integration
+      tags:
+      - integrations
+  /integrations/{intid}:
+    delete:
+      parameters:
+      - description: Integration UUID
+        in: path
+        name: intid
+        required: true
+        type: string
+      responses:
+        "202":
+          description: Accepted
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete an integration
+      tags:
+      - integrations
+    get:
+      parameters:
+      - description: Integration UUID
+        in: path
+        name: intid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get an integration
+      tags:
+      - integrations
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Integration UUID
+        in: path
+        name: intid
+        required: true
+        type: string
+      - description: Updated configuration
+        in: body
+        name: integration
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_model.IntegrationConfig'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "403":
+          description: Localfs provider — edit user profile manually
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update an integration
+      tags:
+      - integrations
+  /integrations/{intid}/download/{path}:
+    get:
+      parameters:
+      - description: Integration UUID
+        in: path
+        name: intid
+        required: true
+        type: string
+      - description: Remote file path
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Download a file from a configured integration
+      tags:
+      - integrations
+  /integrations/{intid}/explore/{path}:
+    get:
+      parameters:
+      - description: Integration UUID
+        in: path
+        name: intid
+        required: true
+        type: string
+      - description: Folder path (use leading slash; empty for root)
+        in: path
+        name: path
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_messages.IntegrationFolder'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Browse a folder on a configured integration
+      tags:
+      - integrations
+  /integrations/{intid}/metadata/{path}:
+    get:
+      parameters:
+      - description: Integration UUID
+        in: path
+        name: intid
+        required: true
+        type: string
+      - description: Remote file path
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_messages.IntegrationMetadata'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get metadata for a file on a configured integration
+      tags:
+      - integrations
+  /login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Email and password
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.LoginForm'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: JWT bearer token
+          schema:
+            type: string
+        "400":
+          description: invalid request body
+          schema:
+            type: string
+        "401":
+          description: wrong credentials
+          schema:
+            type: string
+        "500":
+          description: internal error
+          schema:
+            type: string
+      summary: Authenticate and obtain a JWT
+      tags:
+      - auth
+  /logout:
+    get:
+      responses:
+        "200":
+          description: logged out
+          schema:
+            type: string
+      summary: Log out (clear auth cookie)
+      tags:
+      - auth
+  /newcode:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 8-character pairing code
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Generate a device pairing code
+      tags:
+      - auth
+  /passcode/resets:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_messages.PasscodeReset'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List pending passcode-reset requests
+      tags:
+      - passcode
+  /passcode/resets/{uuid}:
+    delete:
+      parameters:
+      - description: Reset request UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Dismiss a pending passcode-reset request
+      tags:
+      - passcode
+  /passcode/resets/{uuid}/approve:
+    post:
+      parameters:
+      - description: Reset request UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Approve a pending passcode-reset request
+      tags:
+      - passcode
+  /profile:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Current + new password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ResetPasswordForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_model.User'
+        "400":
+          description: wrong user, missing fields, or wrong current password
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Change the authenticated user's password
+      tags:
+      - profile
+  /register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Email and password
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.LoginForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_model.User'
+        "400":
+          description: registration closed or invalid body
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "403":
+          description: registrations only accepted from localhost
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      summary: Register a new user account
+      tags:
+      - auth
+  /screenshare/offer:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareOffer'
+        "404":
+          description: no active room
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "504":
+          description: device did not respond within 30s
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Request a WebRTC offer from the active screenshare session
+      tags:
+      - screenshare
+  /screenshare/room:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareRoom'
+        "404":
+          description: no active room
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get the caller's active screenshare room
+      tags:
+      - screenshare
+  /screenshare/room/{roomId}:
+    delete:
+      parameters:
+      - description: Room ID (currently ignored — all caller rooms are deleted)
+        in: path
+        name: roomId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Tear down all screenshare rooms for the caller
+      tags:
+      - screenshare
+    get:
+      parameters:
+      - description: Room ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareRoom'
+        "404":
+          description: room not found
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a screenshare room by ID
+      tags:
+      - screenshare
+  /screenshare/room/{roomId}/answer:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Room ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      - description: Signaling payload + target client ID
+        in: body
+        name: answer
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ScreenshareAnswer'
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: invalid body
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "404":
+          description: room not found
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Send a WebRTC answer to a screenshare room
+      tags:
+      - screenshare
+  /sync:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Trigger sync notification for connected devices
+      tags:
+      - sync
+  /users:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all users (admin)
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: New user fields
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.NewUser'
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Create a user (admin)
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User to update — ID must reference an existing user
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.User'
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad Request
+        "404":
+          description: user not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Update a user (admin)
+      tags:
+      - admin
+  /users/{userid}:
+    delete:
+      parameters:
+      - description: User ID
+        in: path
+        name: userid
+        required: true
+        type: string
+      responses:
+        "202":
+          description: Accepted
+        "500":
+          description: cannot delete current user, or storage error
+      security:
+      - BearerAuth: []
+      summary: Delete a user (admin)
+      tags:
+      - admin
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: userid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse'
+        "401":
+          description: querying a different user as non-admin
+          schema:
+            type: string
+        "404":
+          description: user not found
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get a user by ID (admin or self)
+      tags:
+      - admin
 securityDefinitions:
   BearerAuth:
     in: header
