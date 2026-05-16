@@ -248,6 +248,18 @@ func (app *ReactAppWrapper) getBackend(c *gin.Context) backend {
 	return backend
 }
 
+// listDocuments returns the authenticated user's document and folder tree,
+// including the trash. Routed through the sync10 or sync15 backend based
+// on the user's profile.
+//
+// @Summary  List documents
+// @Tags     documents
+// @Produce  json
+// @Success  200 {object} viewmodel.DocumentTree
+// @Failure  401 {object} viewmodel.ErrorResponse "missing or invalid auth"
+// @Failure  500 {object} viewmodel.ErrorResponse
+// @Router   /documents [get]
+// @Security BearerAuth
 func (app *ReactAppWrapper) listDocuments(c *gin.Context) {
 	uid := userID(c)
 

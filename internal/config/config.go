@@ -81,6 +81,11 @@ const (
 	envMQTTPort          = "MQTT_PORT"
 	envICEServers        = "ICE_SERVERS"
 	envHashSchemaVersion = "HASH_SCHEMA_VERSION"
+
+	// envEnableOpenAPI mounts the generated OpenAPI spec and Swagger UI
+	// at /ui/api/openapi.json and /ui/api/docs/. Off by default — the
+	// admin API surface is sensitive.
+	envEnableOpenAPI = "RM_ENABLE_OPENAPI"
 )
 
 // Config config
@@ -106,6 +111,7 @@ type Config struct {
 	MQTTPort          string
 	ICEServers        []interface{}
 	HashSchemaVersion string
+	EnableOpenAPI     bool
 }
 
 // Verify verify
@@ -236,6 +242,7 @@ func FromEnv() *Config {
 	}
 
 	trustProxy, _ := strconv.ParseBool(os.Getenv(envTrustProxy))
+	enableOpenAPI, _ := strconv.ParseBool(os.Getenv(envEnableOpenAPI))
 
 	mqttPort := os.Getenv(envMQTTPort)
 	if mqttPort == "" {
@@ -283,6 +290,7 @@ func FromEnv() *Config {
 		MQTTPort:          mqttPort,
 		ICEServers:        iceServers,
 		HashSchemaVersion: hashSchemaVersion,
+		EnableOpenAPI:     enableOpenAPI,
 	}
 	return &cfg
 }
@@ -308,6 +316,7 @@ General:
 	%s Send auth cookie only via https
 	%s	Trust the proxy for X-Forwarded-For/X-Real-IP (set only if behind a proxy)
 	%s	Hash tree schema version: "3" or "4" (default: 3)
+	%s	Serve OpenAPI spec at /ui/api/openapi.json and Swagger UI at /ui/api/docs (default: false)
 
 MQTT (for screenshare):
 	%s	MQTT TCP port (default: 8883)
@@ -345,6 +354,7 @@ myScript hwr (needs a developer account):
 		envHTTPSCookie,
 		envTrustProxy,
 		envHashSchemaVersion,
+		envEnableOpenAPI,
 
 		envMQTTPort,
 		envICEServers,

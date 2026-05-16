@@ -1,3 +1,8 @@
+// Package ui serves the React admin app and the /ui/api JSON endpoints
+// that the React UI (and external integrators) consume.
+//
+// The OpenAPI spec under internal/ui/docs is generated from swag
+// annotations on the handlers. Regenerate with `make swagger`.
 package ui
 
 import (

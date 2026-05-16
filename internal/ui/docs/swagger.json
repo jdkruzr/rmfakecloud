@@ -1,0 +1,78 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "JSON API consumed by the React admin UI and available to external integrators. The device-facing sync API (under /sync, /document-storage, etc.) is intentionally NOT documented here — those paths are a firmware contract.",
+        "title": "rmfakecloud Admin API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/ui/api",
+    "paths": {
+        "/documents": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "List documents",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.DocumentTree"
+                        }
+                    },
+                    "401": {
+                        "description": "missing or invalid auth",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_ddvk_rmfakecloud_internal_ui_viewmodel.DocumentTree": {
+            "type": "object",
+            "properties": {
+                "entries": {
+                    "type": "array",
+                    "items": {}
+                },
+                "trash": {
+                    "type": "array",
+                    "items": {}
+                }
+            }
+        },
+        "github_com_ddvk_rmfakecloud_internal_ui_viewmodel.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

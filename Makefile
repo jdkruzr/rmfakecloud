@@ -13,7 +13,9 @@ UIFILES += ui/package.json
 TARGETS := $(addprefix $(OUT_DIR)/$(BINARY)-, x64 armv6 armv7 arm64 win64 docker)
 PNPM	= cd ui; pnpm
 
-.PHONY: all run runui clean test testgo testui
+.PHONY: all run runui clean test testgo testui swagger swagger-install swagger-check
+
+SWAG ?= $(shell command -v swag 2>/dev/null || echo $(shell go env GOPATH)/bin/swag)
 
 build: $(OUT_DIR)/$(BINARY)-x64
 
@@ -71,4 +73,17 @@ testui:
 
 testgo:
 	go test ./...
+
+swagger-install:
+	go install github.com/swaggo/swag/cmd/swag@latest
+
+# Regenerates internal/ui/docs from swag annotations on the /ui/api handlers.
+# Spec is checked in so it can be served by the binary and reviewed in PRs.
+swagger:
+	$(SWAG) init -g internal/ui/routes.go -o internal/ui/docs --parseDependency --parseInternal
+
+# CI gate: fail if checked-in spec is out of sync with annotations.
+swagger-check: swagger
+	@git diff --exit-code internal/ui/docs || \
+	    (echo "OpenAPI spec out of date — run 'make swagger' and commit"; exit 1)
 
