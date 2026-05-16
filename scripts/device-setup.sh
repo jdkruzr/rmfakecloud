@@ -237,9 +237,10 @@ stage_payload() {
 # ---- 7. run installer -------------------------------------------------------
 run_installer() {
     info "running $INSTALLER on tablet (this stops xochitl while it works)"
-    local cmd="cd /home/root && chmod +x ./$INSTALLER && STORAGE_URL='$STORAGE_URL'"
-    [ -n "$REMOTE_CA_CERT" ] && cmd="$cmd CA_CERT='$REMOTE_CA_CERT'"
-    cmd="$cmd sh ./$INSTALLER install"
+    # The upstream installer takes the cloud URL as a positional arg, not env:
+    # `sh installer-rmpro.sh install <url>`. Without it, getproxy() prompts
+    # interactively (`read -p`) and hangs the ssh session indefinitely.
+    local cmd="cd /home/root && chmod +x ./$INSTALLER && sh ./$INSTALLER install '$STORAGE_URL'"
     ssh_run "$cmd"
 }
 
