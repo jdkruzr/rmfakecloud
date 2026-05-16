@@ -81,6 +81,14 @@ parse_args() {
 
 # ---- 1. load env ------------------------------------------------------------
 load_env() {
+    # Stash CLI values before sourcing the env file — `set -a; . file; set +a`
+    # exports every assignment in the file, which would otherwise clobber any
+    # variable a flag just set. We reapply CLI values after sourcing so the
+    # documented precedence (CLI > env file > default) actually holds.
+    local cli_device_ip=$DEVICE_IP cli_device_user=$DEVICE_USER cli_ssh_key=$SSH_KEY
+    local cli_model=$MODEL cli_ca_cert=$CA_CERT cli_installer_version=$INSTALLER_VERSION
+    local cli_keep_payload=$KEEP_PAYLOAD
+
     if [ -e "$ENV_FILE" ]; then
         log "loading $ENV_FILE"
         # shellcheck disable=SC1090
@@ -88,14 +96,13 @@ load_env() {
     elif [ "$ENV_FILE" != "./device.env" ]; then
         die "env file not found: $ENV_FILE"
     fi
-    # CLI flags override env-file values. Apply defaults last.
-    DEVICE_IP=${DEVICE_IP:-${DEVICE_IP_DEFAULT:-10.11.99.1}}
-    DEVICE_USER=${DEVICE_USER:-${DEVICE_USER_DEFAULT:-root}}
-    SSH_KEY=${SSH_KEY:-${SSH_KEY_DEFAULT:-}}
-    MODEL=${MODEL:-${MODEL_DEFAULT:-auto}}
-    CA_CERT=${CA_CERT:-${CA_CERT_DEFAULT:-}}
-    INSTALLER_VERSION=${INSTALLER_VERSION:-${INSTALLER_VERSION_DEFAULT:-v0.0.6}}
-    KEEP_PAYLOAD=${KEEP_PAYLOAD:-${KEEP_PAYLOAD_DEFAULT:-0}}
+    DEVICE_IP=${cli_device_ip:-${DEVICE_IP:-10.11.99.1}}
+    DEVICE_USER=${cli_device_user:-${DEVICE_USER:-root}}
+    SSH_KEY=${cli_ssh_key:-${SSH_KEY:-}}
+    MODEL=${cli_model:-${MODEL:-auto}}
+    CA_CERT=${cli_ca_cert:-${CA_CERT:-}}
+    INSTALLER_VERSION=${cli_installer_version:-${INSTALLER_VERSION:-v0.0.6}}
+    KEEP_PAYLOAD=${cli_keep_payload:-${KEEP_PAYLOAD:-0}}
     [ -n "${STORAGE_URL:-}" ] || die "STORAGE_URL not set (in $ENV_FILE or env). Pass --env-file or set it."
     log "STORAGE_URL=$STORAGE_URL  device=$DEVICE_USER@$DEVICE_IP  model=$MODEL"
 }
@@ -166,7 +173,7 @@ detect_model() {
     case $machine in
         *"reMarkable Prototype 1"*|*"reMarkable 1"*) MODEL=rm1;;
         *"reMarkable 2"*) MODEL=rm2;;
-        *"reMarkable Ferrari"*|*"Paper Pro"*|*"Move"*) MODEL=rmpro;;
+        *"reMarkable Ferrari"*|*"reMarkable Chiappa"*|*"Paper Pro"*) MODEL=rmpro;;
         *)
             warn "could not auto-detect model from: $machine"
             MODEL=$(prompt "Enter model (rm1|rm2|rmpro)" "rm2")
