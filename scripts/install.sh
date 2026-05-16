@@ -369,8 +369,8 @@ verify() {
     fi
     log "/health: $health"
 
-    if ! curl -fsI "http://127.0.0.1:$PORT/" >/dev/null 2>&1; then
-        warn "HEAD / did not return 2xx — UI assets may not be embedded"
+    if ! curl -fsS "http://127.0.0.1:$PORT/" -o /dev/null 2>&1; then
+        warn "GET / did not return 2xx — UI assets may not be embedded"
     else
         log "UI root responds"
     fi

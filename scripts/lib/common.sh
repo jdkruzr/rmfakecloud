@@ -29,7 +29,7 @@ require_root() {
 ver_ge() {
     # shellcheck disable=SC2046
     set -- $(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -n1) "$1"
-    [ "$1" = "$3" ]
+    [ "$1" = "$2" ]
 }
 
 # Atomic write_if_changed PATH MODE OWNER < CONTENT
