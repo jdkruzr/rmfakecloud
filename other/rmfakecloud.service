@@ -1,13 +1,44 @@
 [Unit]
-Description=rmfakecloud
+Description=rmfakecloud self-hosted reMarkable cloud
+Documentation=https://github.com/ddvk/rmfakecloud
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-EnvironmentFile=/etc/rmfakecloud.env
-ExecStart=/usr/bin/rmfakecloud-arm64
+Type=simple
 User=rmfakecloud
 Group=rmfakecloud
-Restart=always
+EnvironmentFile=/etc/rmfakecloud.env
+ExecStart=/opt/rmfakecloud/bin/rmfakecloud
+Restart=on-failure
 RestartSec=5
+UMask=0027
+
+# Hardening — binary only needs to write DATADIR and bind a TCP port.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=/var/rmfakecloud
 
 [Install]
 WantedBy=multi-user.target
